@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculadora Estatística</title>
+    
+    <!-- Referência ao Bootstrap via CDN -->
+    <%= stylesheet_link_tag 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css' %>
+
+    <!-- Referência ao seu CSS local -->
+    <%= stylesheet_link_tag 'style', media: 'all' %>
+
+    <!-- Referência ao W3.CSS -->
+    <%= stylesheet_link_tag 'https://www.w3schools.com/w3css/4/w3.css' %>
+
+    <!-- Referência ao Font Awesome -->
+    <%= stylesheet_link_tag 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' %>
+
+    <style>
+      body,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: "Montserrat", sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      .w3-sidebar {
+        width: 180px;
+        background: #111;
+        color: white;
+        position: fixed;
+        height: 100%;
+        overflow: auto;
+      }
+      #main {
+        margin-left: 200px;
+        transition: margin-left 0.3s ease;
+        padding: 20px;
+      }
+      @media only screen and (max-width: 600px) {
+        #main {
+          margin-left: 0;
+        }
+      }
+      .section {
+        display: none;
+      }
+      .active {
+        display: block;
+      }
+      .dark-mode {
+        background-color: #1a1a1a;
+        color: white;
+      }
+      .dark-mode .w3-sidebar {
+        background: #333;
+      }
+      .dark-mode table {
+        background-color: #333;
+        color: white;
+      }
+      .dashboard-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: space-between;
+      }
+      .dashboard-box {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        flex: 1;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body class="w3-black">
+    <nav class="w3-sidebar w3-bar-block w3-small w3-center">
+      <button id="theme-toggle" class="w3-button w3-padding-large">
+        🌙 Tema
+      </button>
+      <a
+        href="#"
+        class="w3-bar-item w3-button w3-padding-large w3-black"
+        onclick="showSection('home')"
+      >
+        <i class="fa fa-home w3-xxlarge"></i>
+        <p>Dados</p>
+      </a>
+      <a
+        href="#"
+        class="w3-bar-item w3-button w3-padding-large w3-hover-black"
+        onclick="showSection('results')"
+      >
+        <i class="fa fa-list w3-xxlarge"></i>
+        <p>RESULTADOS</p>
+      </a>
+      <a
+        href="#"
+        class="w3-bar-item w3-button w3-padding-large w3-hover-black"
+        onclick="showSection('chart')"
+      >
+        <i class="fa fa-bar-chart w3-xxlarge"></i>
+        <p>GRÁFICO</p>
+      </a>
+      <a
+        href="#"
+        class="w3-bar-item w3-button w3-padding-large w3-hover-black"
+        onclick="showSection('compact')"
+      >
+        <i class="fa fa-th-large w3-xxlarge"></i>
+        <p>DASHBOARD</p>
+      </a>
+    </nav>
+
+    <div id="main" class="w3-padding-large">
+      <div id="home" class="section active">
+        <h1 style="font-size: 5vw">Calculadora Estatística</h1>
+        <div>
+          <label
+            ><input type="radio" name="input-type" value="xi" checked />
+            Inserção por xi</label
+          >
+          <label
+            ><input type="radio" name="input-type" value="class" /> Inserção por
+            classes</label
+          >
+        </div>
+
+        <table id="data-table" class="table table-dark">
+          <thead>
+            <tr>
+              <th class="xi-header">xi</th>
+              <th class="class-header" style="display: none">
+                Limite Inferior
+              </th>
+              <th class="class-header" style="display: none">
+                Limite Superior
+              </th>
+              <th>fi</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <button id="add-row" class="btn btn-primary">Adicionar Linha</button>
+        <label for="decimal-places">Casas Decimais:</label>
+        <input type="number" id="decimal-places" value="2" min="0" />
+        <button id="calculate" class="btn btn-success">Calcular</button>
+      </div>
+
+      <div id="results" class="section">
+        <h2 style="font-size: 4vw">Resultados</h2>
+        <div id="results-content"></div>
+      </div>
+
+      <div id="chart" class="section">
+        <h2 style="font-size: 4vw">Gráfico Interativo</h2>
+        <canvas id="data-chart"></canvas>
+      </div>
+
+      <div id="compact" class="section">
+        <h2 style="font-size: 4vw">Dashboard</h2>
+        <div class="dashboard-container">
+          <div class="dashboard-box" id="data-overview"></div>
+          <div class="dashboard-box" id="results-content-compact"></div>
+        </div>
+        <canvas id="data-chart-compact"></canvas>
+      </div>
+    </div>
+
+    <!-- Referência ao seu JavaScript local -->
+    <%= javascript_include_tag 'script' %>
+
+    <!-- Chart.js CDN -->
+    <%= javascript_include_tag 'https://cdn.jsdelivr.net/npm/chart.js' %>
+
+    <script>
+      function showSection(sectionId) {
+        document.querySelectorAll(".section").forEach((section) => {
+          section.classList.remove("active");
+        });
+        document.getElementById(sectionId).classList.add("active");
+      }
+
+      document.querySelectorAll("input[name='input-type']").forEach((radio) => {
+        radio.addEventListener("change", function () {
+          const useClasses = this.value === "class";
+
+          // Alterar visibilidade das colunas da tabela
+          document
+            .querySelectorAll(".xi-header")
+            .forEach(
+              (el) => (el.style.display = useClasses ? "none" : "table-cell")
+            );
+          document
+            .querySelectorAll(".class-header")
+            .forEach(
+              (el) => (el.style.display = useClasses ? "table-cell" : "none")
+            );
+
+          // Atualizar todas as linhas da tabela
+          document.querySelectorAll("#data-table tbody tr").forEach((row) => {
+            const cellXi = row.cells[0];
+            const cellFi = row.cells[useClasses ? 2 : 1]; // Ajuste na posição do fi
+
+            if (useClasses) {
+              // Mudar para modo classes
+              cellXi.innerHTML = `  
+                <input type="number" class="form-control class-limite-inferior" placeholder="Inferior">
+                <input type="number" class="form-control class-limite-superior" placeholder="Superior">
+              `;
+            } else {
+              // Mudar para modo xi
+              cellXi.innerHTML = `<input type="number" class="form-control xi-input" placeholder="xi">`;
+            }
+
+            // Garantir que fi sempre tenha um input editável
+            cellFi.innerHTML = `<input type="number" class="form-control fi-input" placeholder="fi">`;
+          });
+        });
+      });
+
+      // Função para adicionar uma nova linha à tabela
+      document.getElementById("add-row").addEventListener("click", function () {
+        const tableBody = document.querySelector("#data-table tbody");
+        const useClasses =
+          document.querySelector("input[name='input-type']:checked").value ===
+          "class";
+
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+          <td>${
+            useClasses
+              ? `  
+                  <input type="number" class="form-control class-limite-inferior" placeholder="Inferior">
+                  <input type="number" class="form-control class-limite-superior" placeholder="Superior">
+              ` 
+              : `<input type="number" class="form-control xi-input" placeholder="xi">`
+          }</td>
+          <td><input type="number" class="form-control fi-input" placeholder="fi"></td>
+          <td><button class="btn btn-danger btn-sm remove-row">Remover</button></td>
+        `;
+        tableBody.appendChild(newRow);
+      });
+
+      // Remover linha da tabela
+      document
+        .querySelector("#data-table")
+        .addEventListener("click", function (event) {
+          if (event.target.classList.contains("remove-row")) {
+            event.target.closest("tr").remove();
+          }
+        });
+
+      // Função para calcular os resultados
+      document.getElementById("calculate").addEventListener("click", function () {
+        const data = [];
+        const rows = document.querySelectorAll("#data-table tbody tr");
+
+        rows.forEach((row) => {
+          const fi = parseFloat(row.cells[1].querySelector("input").value);
+          let xi = parseFloat(row.cells[0].querySelector("input").value);
+
+          // Lógica para classes
+          if (isNaN(xi)) {
+            const classInferior = parseFloat(
+              row.cells[0].querySelector(".class-limite-inferior").value
+            );
+            const classSuperior = parseFloat(
+              row.cells[0].querySelector(".class-limite-superior").value
+            );
+            xi = (classInferior + classSuperior) / 2;
+          }
+
+          if (!isNaN(fi) && !isNaN(xi)) {
+            data.push({ xi, fi });
+          }
+        });
+
+        // Processar os dados e mostrar resultados aqui
+        const results = processData(data);
+        displayResults(results);
+      });
+
+      function processData(data) {
+        // Processar os dados conforme necessário, calculando estatísticas
+        const sumFi = data.reduce((acc, item) => acc + item.fi, 0);
+        const weightedSum = data.reduce((acc, item) => acc + item.xi * item.fi, 0);
+        const mean = weightedSum / sumFi;
+        const variance = data.reduce(
+          (acc, item) => acc + Math.pow(item.xi - mean, 2) * item.fi,
+          0
+        ) / sumFi;
+        const stdDev = Math.sqrt(variance);
+        return { mean, variance, stdDev };
+      }
+
+      function displayResults(results) {
+        const resultsContainer = document.getElementById("results-content");
+        resultsContainer.innerHTML = `
+          <p>Média: ${results.mean.toFixed(2)}</p>
+          <p>Variância: ${results.variance.toFixed(2)}</p>
+          <p>Desvio Padrão: ${results.stdDev.toFixed(2)}</p>
+        `;
+      }
+    </script>
+  </body>
+</html>
